@@ -1,0 +1,136 @@
+#!/usr/bin/bash
+
+USER_CONFIG="~/.config/movie-gifs.conf"
+LOCAL_CONFIG="./movie-gifs.conf"
+
+BATCH_DIR="./output"
+
+
+for conf in "$USER_CONFIG" "$LOCAL_CONFIG"; do
+    if [ -f "$conf" ]; then
+        echo "Using configuration from $conf ..."
+        source "$conf"
+    fi
+done
+
+
+help() {
+    cat << EOL 
+Basic tool to create gifs from a movie file. Programmable via optional parameters, and user & local config files. Optional batch functionality.
+    
+USAGE: ./movie-gifs [OPTIONS...] OUTPUT_PATH
+
+ACTIONS
+    --help, -h : View this help menu.
+
+PARAMETERS:
+    OUTPUT_PATH: Filepath for output. May be supplied by batch or config file.
+
+OPTIONS:
+    --input, -I [INPUT PATH]: Path for input file. While required information, the CLI parameter is optional, given the preferred method of setting via a config file.
+    --start, -S [TIMESTAMP]: Starting timestamp.
+    --length, -l [DIRECTORY]: Duration of the GIF to create, in seconds.
+    --dimensions, -D [WIDTH]x[HEIGHT]: Dimensions of the GIF output.
+
+BATCH OPTIONS:
+    --batch, -b [PATH]: Path to CSV file with batch information. See README for more.
+    --batch-index, -i [INDICES,...]: Pick-and-choose entries from the batch file by line number. Multiple are allowed, comma-separated. (Ignored if used without "--batch" flag.)
+    
+For further information, view README.md.
+EOL
+    exit 0
+}
+
+
+batch() {
+    line_count=1
+    mkdir -p "$BATCH_DIR"
+
+    while IFS="," read -r name start length
+    do
+        if [ -z "$BATCH_INDICES" ] || [[ $(echo "$BATCH_INDICES" | grep -w "$line_count") ]]; then
+            OUTPUT_PATH="$BATCH_DIR/$name.gif"
+            START_TIME=$start
+            DURATION=$length
+            render &
+        fi
+
+        ((line_count++))
+
+    done < $BATCH_PATH
+}
+
+render() {
+    echo "Rendering '$OUTPUT_PATH' ..."
+
+    ffmpeg -y -v quiet -ss "$START_TIME" -t "$DURATION" -i "$INPUT_FILE" -s "$DIMENSIONS" "$OUTPUT_PATH" &>/dev/null
+}
+
+
+# Iterate through all arguments, parsing flags.
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            help
+            ;;
+        
+        -I|--input)
+            INPUT_FILE="$2"
+            shift
+            shift
+            ;;
+        
+        -S|--start)
+            START_TIME="$2"
+            shift
+            shift
+            ;;
+
+        -l|--length)
+            DURATION="$2"
+            shift
+            shift
+            ;;
+
+        -D|--dimensions)
+            DIMENSIONS="$2"
+            shift
+            shift
+            ;;
+
+        -b|--batch)
+            BATCH_PATH="$2"
+            shift
+            shift
+            ;;
+
+        -i|--batch-index)
+            BATCH_INDICES=$(echo "$2" | tr "," " ")
+            shift
+            shift
+            ;;
+
+        -*|--*)
+            echo "Option $1 not recognized"
+            exit 1
+            ;;
+            
+        *)
+            OUTPUT_PATH="$1"
+            shift
+            ;;
+    esac
+done
+
+
+if [ "$BATCH_PATH" ]; then
+    batch
+else
+    for i in START_TIME DURATION INPUT_FILE DIMENSIONS OUTPUT_PATH; do
+        if [ -z ${!i} ]; then
+            echo "Parameter $i is missing!"
+            exit 1
+        fi
+    done
+    render
+fi

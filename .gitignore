@@ -1,0 +1,9 @@
+output
+
+*.backup
+*.ignore
+*.gif
+*.conf
+*.csv
+
+!*.example.*
