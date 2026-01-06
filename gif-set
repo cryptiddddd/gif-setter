@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 
-USER_CONFIG="~/.config/movie-gifs.conf"
-LOCAL_CONFIG="./movie-gifs.conf"
+NAME="gif-set"
+
+USER_CONFIG="~/.config/$NAME.conf"
+LOCAL_CONFIG="./$NAME.conf"
 
 BATCH_DIR="./output"
 
@@ -16,9 +18,9 @@ done
 
 help() {
     cat << EOL 
-Basic tool to create gifs from a movie file. Programmable via optional parameters, and user & local config files. Optional batch functionality.
+Basic tool to create gifs from a video file. Programmable via optional parameters, and user & local config files. Optional batch functionality.
     
-USAGE: ./movie-gifs [OPTIONS...] OUTPUT_PATH
+USAGE: ./gif-set [OPTIONS...] OUTPUT_PATH
 
 ACTIONS
     --help, -h : View this help menu.
