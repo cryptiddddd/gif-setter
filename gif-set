@@ -8,14 +8,6 @@ LOCAL_CONFIG="./$NAME.conf"
 BATCH_DIR="./output"
 
 
-for conf in "$USER_CONFIG" "$LOCAL_CONFIG"; do
-    if [ -f "$conf" ]; then
-        echo "Using configuration from $conf ..."
-        source "$conf"
-    fi
-done
-
-
 help() {
     cat << EOL 
 Basic tool to create gifs from a video file. Programmable via optional parameters, and user & local config files. Optional batch functionality.
@@ -33,6 +25,7 @@ OPTIONS:
     --start, -S [TIMESTAMP]: Starting timestamp.
     --length, -l [DIRECTORY]: Duration of the GIF to create, in seconds.
     --dimensions, -D [WIDTH]x[HEIGHT]: Dimensions of the GIF output.
+    --config, -c [PATH]: Path to a custom config file. Will be used on top of local and user configs.
 
 BATCH OPTIONS:
     --batch, -b [PATH]: Path to CSV file with batch information. See README for more.
@@ -111,6 +104,12 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        
+        -c|--config)
+            CUSTOM_CONFIG="$2"
+            shift
+            shift
+            ;;
 
         -*|--*)
             echo "Option $1 not recognized"
@@ -122,6 +121,14 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
     esac
+done
+
+
+for conf in "$USER_CONFIG" "$LOCAL_CONFIG" "$CUSTOM_CONFIG"; do
+    if [ -f "$conf" ]; then
+        echo "Using configuration from $conf ..."
+        source "$conf"
+    fi
 done
 
 
