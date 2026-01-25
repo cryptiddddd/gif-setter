@@ -6,7 +6,9 @@ VERSION="1.0"
 USER_CONFIG="~/.config/$NAME.conf"
 LOCAL_CONFIG="./$NAME.conf"
 
+# Defaults
 BATCH_DIR="./output"
+FMT="gif"
 
 # pretty helpers
 info() { [ $VERBOSE ] && echo -e "\033[1;38m🫐  $1\033[0m"; }
@@ -30,6 +32,7 @@ PARAMETERS:
 
 OPTIONS:
     --input, -I [INPUT PATH]: Path for input file. While required information, the CLI parameter is optional, given the preferred method of setting via a config file.
+    --format, -f [EXT]: File extension. GIF, MP4, MOV. Defaults to GIF.
     --start, -S [TIMESTAMP]: Starting timestamp.
     --length, -l [DIRECTORY]: Duration of the GIF to create, in seconds.
     --dimensions, -D [WIDTH]x[HEIGHT]: Dimensions of the GIF output.
@@ -53,7 +56,7 @@ batch() {
     while IFS="," read -r name start length
     do
         if [ -z "$BATCH_INDICES" ] || [[ $(echo "$BATCH_INDICES" | grep -w "$line_count") ]]; then
-            OUTPUT_PATH="$BATCH_DIR/$name.gif"
+            OUTPUT_PATH="$BATCH_DIR/$name.$FMT"
             START_TIME=$start
             DURATION=$length
             render &
@@ -101,6 +104,12 @@ while [[ $# -gt 0 ]]; do
         
         -S|--start)
             START_TIME="$2"
+            shift
+            shift
+            ;;
+
+        -f|--format)
+            FMT="$2"
             shift
             shift
             ;;
